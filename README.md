@@ -13,9 +13,9 @@ So the server backup script is not fancy, but it works. It is a Ruby script that
 * /root/tmp directory exists
 * the cronjob is setup correctly
 Sample cronjob:
-````
-0 4 * * * /bin/bash -c 'export PATH="$HOME/.rbenv/bin:$PATH" ; eval "$(rbenv init -)"; ruby /root/scripts/svr_bkup.rb
-'````
+```
+0 4 * * * /bin/bash -c 'export PATH="$HOME/.rbenv/bin:$PATH" ; eval "$(rbenv init -)"; ruby /root/scripts/svr_bkup.rb'
+```
 
 The comments explain the main sections:
 * mysql backup
