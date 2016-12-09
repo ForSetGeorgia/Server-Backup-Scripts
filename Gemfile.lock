@@ -1,0 +1,42 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    byebug (9.0.6)
+    chronic (0.10.2)
+    coderay (1.1.1)
+    dotenv (2.1.1)
+    mail (2.6.4)
+      mime-types (>= 1.16, < 4)
+    method_source (0.8.2)
+    mime-types (3.1)
+      mime-types-data (~> 3.2015)
+    mime-types-data (3.2016.0521)
+    pry (0.10.4)
+      coderay (~> 1.1.0)
+      method_source (~> 0.8.1)
+      slop (~> 3.4)
+    pry-byebug (3.4.2)
+      byebug (~> 9.0)
+      pry (~> 0.10)
+    rake (12.0.0)
+    rubyzip (1.2.0)
+    slop (3.6.0)
+    whenever (0.9.7)
+      chronic (>= 0.6.3)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  dotenv (~> 2.1, >= 2.1.1)
+  mail (~> 2.6, >= 2.6.4)
+  pry-byebug (~> 3.4, >= 3.4.2)
+  rake (~> 12.0)
+  rubyzip (~> 1.2)
+  whenever (~> 0.9.7)
+
+RUBY VERSION
+   ruby 2.3.1p112
+
+BUNDLED WITH
+   1.13.5
