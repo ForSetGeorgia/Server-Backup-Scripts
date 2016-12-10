@@ -37,7 +37,9 @@ class CustomLogger
   ## WRITE MESSAGES INTO NICE STRING FORMAT
 
   def info_to_s
-    string = "--- Basic Info ---\n"
+    string =  "======================\n"
+    string << "----- Basic Info -----\n"
+    string << "======================\n"
 
     if info_messages.empty?
       string << "NONE\n"
@@ -45,11 +47,13 @@ class CustomLogger
       string << build_messages(info_messages)
     end
 
-    return "#{string}\n\n\n"
+    return "#{string}\n\n"
   end
 
   def warn_to_s
-    string = "--- Warnings ---\n"
+    string =  "======================\n"
+    string << "-----  Warnings  -----\n"
+    string << "======================\n"
 
     if warning_messages.empty?
       string << "NONE\n"
@@ -57,11 +61,13 @@ class CustomLogger
       string << build_messages(warning_messages)
     end
 
-    return "#{string}\n\n\n"
+    return "#{string}\n\n"
   end
 
   def errors_to_s
-    string = "--- Errors ---\n"
+    string =  "======================\n"
+    string << "-----   Errors   -----\n"
+    string << "======================\n"
 
     if error_messages.empty?
       string << "NONE\n"
@@ -69,12 +75,14 @@ class CustomLogger
       string << build_messages(error_messages)
     end
 
-    return "#{string}\n\n\n"
+    return "#{string}\n\n"
   end
 
 
   def summary_to_s
-    string = "--- Summary Info ---\n"
+    string =  "======================\n"
+    string << "---- Summary Info ----\n"
+    string << "======================\n"
 
     if summary_messages.empty?
       string << "NONE\n"
@@ -90,7 +98,7 @@ class CustomLogger
       end
     end
 
-    return "#{string}\n\n\n"
+    return "#{string}\n\n"
   end
 
 

@@ -12,14 +12,14 @@ def variable_is_true?(key)
   variable_exists?(key) && ENV[key].downcase == 'true'
 end
 
-def send_email(logger)
+def send_email(logger, time_min, time_sec)
   mail = Mail.new do
     from    ENV['FEEDBACK_FROM_EMAIL']
     to      ENV['FEEDBACK_TO_EMAIL']
-    subject "#{ENV['SERVER_NAME']} Server Backup Report"
+    subject "#{ENV['SERVER_NAME']} Server Backup Report (#{Time.now.strftime('%F')})"
   end
 
-  mail[:body] = build_email_body(logger)
+  mail[:body] = build_email_body(logger, time_min, time_sec)
 
   mail.deliver!
 end
@@ -29,14 +29,10 @@ end
 def keys_valid?
   valid = true
   msg = []
-  required_keys = %w(BACKUP_TYPE SERVER_NAME S3_BUCKET_PREFIX TMP_DIR LOG_DIR WHEN_BACKUP_SERVER)
-  required_keys_prod = %w(FEEDBACK_FROM_EMAIL FEEDBACK_FROM_EMAIL_PASSWORD FEEDBACK_TO_EMAIL)
+  required_keys = %w(BACKUP_TYPE SERVER_NAME S3_BUCKET_PREFIX TMP_DIR LOG_DIR WHEN_BACKUP_SERVER FEEDBACK_FROM_EMAIL FEEDBACK_FROM_EMAIL_PASSWORD FEEDBACK_TO_EMAIL)
   mysql_keys = %w(MYSQL_USER MYSQL_PASSWORD)
   missing_keys = []
   keys = required_keys
-  if environment_is_production?
-    keys << required_keys_prod
-  end
   if variable_is_true?('HAS_MYSQL')
     keys << mysql_keys
   end
@@ -87,15 +83,24 @@ else
 end
 
 
+######################################
+######################################
+
 private
 
-  def build_email_body(logger)
+  def build_email_body(logger, time_min, time_sec)
     body = ''
+
+    # add time to finish backup
+    body << "======================\n"
+    body << "---- Running Time ----\n"
+    body << "======================\n"
+    body << "#{time_min} MIN #{time_sec} SEC"
+
+    body << "\n\n"
 
     # add summary section
     body << logger.summary_to_s
-
-    body << "\n\n\n\n"
 
     # add errors
     body << logger.errors_to_s
