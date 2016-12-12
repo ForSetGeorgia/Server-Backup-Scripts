@@ -56,12 +56,12 @@ def run_server_backup
       db_fname = "#{ENV['SERVER_NAME']}_#{db_type}_#{ENV['BACKUP_TYPE']}_#{date}.tar.bz"
 
       logger.info("mysql", "Getting list databases ...")
-      dbs = `mysql --user=#{ENV['MYSQL_USER']} --password=#{ENV['MYSQL_PASSWORD']} -e "SHOW DATABASES;" | tr -d "| " | grep -v Database`.split("\n")
+      dbs = `mysql --user=#{ENV['MYSQL_USER']} --password='#{ENV['MYSQL_PASSWORD']}' -e "SHOW DATABASES;" | tr -d "| " | grep -v Database`.split("\n")
       logger.info("mysql", "Finished getting list of mysql databases.")
 
       dbs.each do |db|
         logger.info("mysql", "Dumping #{db} ...")
-        `mysqldump --force --opt --single-transaction --user=#{ENV['MYSQL_USER']} --password=#{ENV['MYSQL_PASSWORD']} --databases #{db} > #{ENV['TMP_DIR']}/#{db}.sql`
+        `mysqldump --force --opt --single-transaction --user=#{ENV['MYSQL_USER']} --password='#{ENV['MYSQL_PASSWORD']}' --databases #{db} > #{ENV['TMP_DIR']}/#{db}.sql`
         logger.info("mysql", "Finished dumping #{db}.")
       end
 
