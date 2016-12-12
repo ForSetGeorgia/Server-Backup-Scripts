@@ -70,7 +70,7 @@ end
 
 ######################################
 ## CONFIG SETTINGS
-if environment_is_production?
+if environment_is_production? || variable_is_true?('SEND_REAL_EMAIL')
   Mail.defaults do
     delivery_method :smtp,
                     address: 'smtp.gmail.com',
