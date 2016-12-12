@@ -68,9 +68,10 @@ def keys_valid?
   return valid, msg
 end
 
+
 ######################################
 ## CONFIG SETTINGS
-if environment_is_production? || variable_is_true?('SEND_REAL_EMAIL')
+if environment_is_production? || variable_is_true?('IS_SERVER')
   Mail.defaults do
     delivery_method :smtp,
                     address: 'smtp.gmail.com',
@@ -87,6 +88,7 @@ else
                     port: 1025
   end
 end
+
 
 
 ######################################

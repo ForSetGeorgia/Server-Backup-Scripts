@@ -174,7 +174,7 @@ def run_server_backup
       start_local = Time.now
       logger.info("directories", "Getting list of rails directories ...")
       apps = []
-      if environment_is_production?
+      if variable_is_true?('IS_SERVER')
         apps << Dir.glob('/home/**/shared/system') # capistrano v2 folder structure
         apps << Dir.glob('/home/**/shared/public') # mina folder structure
       else
