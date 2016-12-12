@@ -3,16 +3,19 @@ class CustomLogger
   def initialize(file_path)
     @logger = Logger.new("#{file_path}")
 
+    @start = Time.now
+
     @info_messages = [] # format: [label, message]
     @warning_messages = [] # format: [label, message]
     @error_messages = [] # format: [label, message]
-    @summary_messages = [] # format: [label, array of items]
+    @summary_messages = [] # format: [label, array of items, total time]
   end
 
   attr_reader :info_messages,
               :warning_messages,
               :error_messages, 
-              :summary_messages
+              :summary_messages,
+              :start
 
   def info(label, message)
     logger.info(label) {message}
@@ -29,8 +32,8 @@ class CustomLogger
     @error_messages << [label, message]
   end
 
-  def summary(label, message)
-    @summary_messages << [label, message]
+  def summary(label, message, total_time)
+    @summary_messages << [label, message, total_time]
   end
 
   #####################################3
@@ -94,6 +97,7 @@ class CustomLogger
             string << "  - #{item}\n"
           end
         end
+        string << "Total Time: #{format_time(msg[2])}\n"
         string << "\n"
       end
     end

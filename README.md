@@ -1,24 +1,33 @@
 # Server-Bakcup-Scripts
-Backup scripts using ruby and amazon s3 for each server
+The backup scripts are written in ruby and use amazon s3 (s3cmd) to store the backups.
 
-So the server backup script is not fancy, but it works. It is a Ruby script that uses Amazon's s3cmd program to sync files to our AWS S3 account daily. It is attached to this email.
+Each step of the backup script is written to a log (as defined in .env) and a summary of the backup is sent to an email address (also defined in .env). The email will also contain a list of errors if any occurred during the backup process.
 
-
-# The requirements are:
-* Ruby is installed under root (rbenv)
-* s3cmd is installed
-* the target bucket exists
-* all the variables are correct in the script for the server in question
-* the script is located in /root/scripts/
-* /root/tmp directory exists
-* the cronjob is setup correctly
-Sample cronjob:
-```
-0 4 * * * /bin/bash -c 'export PATH="$HOME/.rbenv/bin:$PATH" ; eval "$(rbenv init -)"; ruby /root/scripts/svr_bkup.rb'
-```
-
-The comments explain the main sections:
+# The items that can be backed up
+You indicate which of these are to be backed up in the .env file.
 * mysql backup
-* mongo db backup (if exists)
-* specific folders
-* Rails' shared/system folders # this will need to be updated as your use of Rails changes
+* postegres backup
+* mongo db backup
+* specific folders (/etc, /home/user/folder, etc.)
+* Rails' shared/system folders
+
+
+# The requirements are
+* Ruby is installed under root (rbenv, at least ruby 2.3.1)
+* [s3cmd is installed](http://tecadmin.net/install-s3cmd-manage-amazon-s3-buckets/) 
+* the target bucket exists in Amazon S3 (this is set in the .env file)
+
+# Get the script configured
+* `bundle install`
+* `cp .env.example .env`
+* edit .env and set all of the configuration options
+
+## Evironment
+If the environment setting is not production, nothing will be pushed to Amazon. So you can set the environment to development and run the backup script to make sure everything is working. Then when you are ready you can set the enviornment to production so the data is saved to Amazon.
+
+# Test the backup script
+* `bundle exec rake backup:run`
+
+# Schedule the cron job by running the task
+* `bundle exec rake backup:schedule:run_daily`
+

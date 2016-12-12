@@ -12,14 +12,20 @@ def variable_is_true?(key)
   variable_exists?(key) && ENV[key].downcase == 'true'
 end
 
-def send_email(logger, time_min, time_sec)
+def format_time(time)
+  time_min = (time / 60).round(2) # minutes
+  time_sec = (time % 60).round(2) # seconds
+  return "#{time_min} MIN #{time_sec} SEC"
+end
+
+def send_email(logger, total_time)
   mail = Mail.new do
     from    ENV['FEEDBACK_FROM_EMAIL']
     to      ENV['FEEDBACK_TO_EMAIL']
     subject "#{ENV['SERVER_NAME']} Server Backup Report (#{Time.now.strftime('%F')})"
   end
 
-  mail[:body] = build_email_body(logger, time_min, time_sec)
+  mail[:body] = build_email_body(logger, total_time)
 
   mail.deliver!
 end
@@ -29,7 +35,7 @@ end
 def keys_valid?
   valid = true
   msg = []
-  required_keys = %w(BACKUP_TYPE SERVER_NAME S3_BUCKET_PREFIX TMP_DIR LOG_DIR WHEN_BACKUP_SERVER FEEDBACK_FROM_EMAIL FEEDBACK_FROM_EMAIL_PASSWORD FEEDBACK_TO_EMAIL)
+  required_keys = %w(BACKUP_TYPE SERVER_NAME S3_BUCKET_PREFIX TMP_DIR LOG_DIR BACKUP_SERVER_TIME FEEDBACK_FROM_EMAIL FEEDBACK_FROM_EMAIL_PASSWORD FEEDBACK_TO_EMAIL)
   mysql_keys = %w(MYSQL_USER MYSQL_PASSWORD)
   missing_keys = []
   keys = required_keys
@@ -88,14 +94,15 @@ end
 
 private
 
-  def build_email_body(logger, time_min, time_sec)
+  def build_email_body(logger, total_time)
     body = ''
 
     # add time to finish backup
     body << "======================\n"
     body << "---- Running Time ----\n"
     body << "======================\n"
-    body << "#{time_min} MIN #{time_sec} SEC"
+    body << "Start Time: #{logger.start}\n"
+    body << "Total Time: #{format_time(total_time)}"
 
     body << "\n\n"
 
