@@ -32,7 +32,7 @@ def run_server_backup
   begin
     # main variables
 
-    bucket = "#{ENV['S3_BUCKET_PREFIX']}-#{ENV['SERVER_NAME']}" # old s3 names could have underscore, new names should have dash
+    bucket = "#{ENV['S3_BUCKET_PREFIX']}#{ENV['S3_BUCKET_SEPARATOR']}#{ENV['SERVER_NAME']}"
     date = Time.now.strftime('%y-%m-%d')
     log = "#{ENV['SERVER_NAME']}_#{ENV['BACKUP_TYPE']}_backup.log"
     logger = CustomLogger.new("#{ENV['LOG_DIR']}/#{log}")
