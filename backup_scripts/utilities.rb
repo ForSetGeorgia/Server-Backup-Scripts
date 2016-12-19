@@ -13,7 +13,7 @@ def variable_is_true?(key)
 end
 
 def format_time(time)
-  time_min = (time / 60).round(2) # minutes
+  time_min = (time / 60).floor # minutes without decimal since decimal is seconds
   time_sec = (time % 60).round(2) # seconds
   return "#{time_min} MIN #{time_sec} SEC"
 end
