@@ -73,7 +73,7 @@ def run_server_backup
 
       logger.info("mysql", "Backing up tarball to s3 ...")
       if environment_is_production?
-        `s3cmd put #{ENV['TMP_DIR']}/#{db_fname} s3://#{bucket}/#{db_folder}/#{db_fname}`
+        `#{ENV['S3CMD_PATH']} put #{ENV['TMP_DIR']}/#{db_fname} s3://#{bucket}/#{db_folder}/#{db_fname}`
       else
         logger.info("mysql", ">>> this is not production so not saving to s3")
       end
@@ -110,7 +110,7 @@ def run_server_backup
 
       logger.info("mongo", "Backing up tarball to s3 ...")
       if environment_is_production?
-        `s3cmd put  #{ENV['TMP_DIR']}/#{db_fname} s3://#{bucket}/#{db_folder}/#{db_fname}`
+        `#{ENV['S3CMD_PATH']} put  #{ENV['TMP_DIR']}/#{db_fname} s3://#{bucket}/#{db_folder}/#{db_fname}`
       else
         logger.info("mongo", ">>> this is not production so not saving to s3")
       end
@@ -160,7 +160,7 @@ def run_server_backup
     dirs.each do |dir|
       logger.info("directories", "Backing up #{dir} to s3 ...")
       if environment_is_production?
-        `s3cmd sync --skip-existing #{dir}  s3://#{bucket}/#{dir_folder}/`
+        `#{ENV['S3CMD_PATH']} sync --skip-existing #{dir}  s3://#{bucket}/#{dir_folder}/`
       else
         logger.info("directories", ">>> this is not production so not saving to s3")
       end
@@ -199,7 +199,7 @@ def run_server_backup
         logger.info("directories", "Backing up #{app} to s3 ...")
         app_name = app.split('/')[2].chomp
         if environment_is_production?
-          `s3cmd sync -r #{app}  s3://#{bucket}/#{dir_folder}/#{app_name}/`
+          `#{ENV['S3CMD_PATH']} sync -r #{app}  s3://#{bucket}/#{dir_folder}/#{app_name}/`
         else
           logger.info("directories", ">>> this is not production so not saving to s3")
         end
