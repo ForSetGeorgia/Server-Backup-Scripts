@@ -18,6 +18,9 @@ You indicate which of these are to be backed up in the .env file.
 * the target bucket exists in Amazon S3 (this is set in the .env file)
 
 # Setting up the backup script
+* `echo "gem: --no-ri --no-rdoc" > ~/.gemrc`
+* `gem install bundler`
+* `rbenv rehash`
 * `bundle install`
 * `cp .env.example .env`
 * edit .env and set all of the configuration options
