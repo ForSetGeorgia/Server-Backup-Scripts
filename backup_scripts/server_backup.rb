@@ -242,7 +242,9 @@ def run_server_backup
   total_time = Time.now - start_time
 
   # send the email report
+  logger.info("email", "Sending the email ...")
   send_email(logger, total_time) if is_valid
+  logger.info("email", "Email sent.")
 
   logger.info("general", "Finished #{ENV['SERVER_NAME']} backup after #{format_time(total_time)}.")
   logger.info("general", "============================================================================")
