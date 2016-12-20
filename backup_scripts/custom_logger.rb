@@ -123,17 +123,17 @@ class CustomLogger
       end
 
       if !all_file_sizes.empty?
+        string << "\n"
         string << "======================\n"
         string << "---- Combined Total Size ----\n"
         string << "======================\n"
         string << "Combined Total Size: #{human_readable_file_size(all_file_sizes.inject(:+))} **\n"
         string << "\n"
         string << "** - database file sizes are the size of the raw dump files; database files are compressed before sending to S3\n"
-        string << "\n"
       end
     end
 
-    return "#{string}\n\n"
+    return "#{string}"
   end
 
 

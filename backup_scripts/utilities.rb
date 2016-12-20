@@ -30,20 +30,53 @@ def send_email(logger, total_time)
   mail.deliver!
 end
 
-# convert number into human readable file size
-def human_readable_file_size(num)
-  human = ''
-  if num < 1024
-    human = "#{num}K"
-  elsif num < 1024*1024
-    human = "#{((num) / 1024).round(1)}M"
-  elsif num < 1024*1024*1024
-    human = "#{((num) / (1024*1024)).round(1)}G"
-  else
-    human = "#{((num) / (1024*1024*1024)).round(1)}T"
+# convert number into human readable size
+# - method works for file sizes (factor of 1024) - default
+#   and also base10 (factor of 1000)
+def human_readable_file_size(num, type='file')
+  string = ''
+  factor = 1024
+  suffixes = ['KB', 'MB', 'GB', 'TB']
+  if type == 'base10'
+    factor = 1000
+    suffixes = ['', 'K', 'M', 'B']
   end
 
-  return human
+  if num < factor
+    string = "#{num}#{suffixes[0]}"
+  elsif num < factor**2
+    string = "#{((num) / factor).round(1)}#{suffixes[1]}"
+  elsif num < factor**3
+    string = "#{((num) / (factor*factor)).round(1)}#{suffixes[2]}"
+  else
+    string = "#{((num) / (factor*factor*factor)).round(1)}#{suffixes[3]}"
+  end
+
+  return string
+end
+
+# get the bucket size and number of objects
+# command response format: size object_count ....
+# return: [bucket size, number of objects in bucket]
+def get_bucket_info
+  bucket = "#{ENV['S3_BUCKET_PREFIX']}#{ENV['S3_BUCKET_SEPARATOR']}#{ENV['SERVER_NAME']}"
+  output = (`#{ENV['S3CMD_PATH']} du s3://#{bucket}`).split(' ')
+  return [output[0], output[1]]
+end
+
+def bucket_info_to_s
+  info = get_bucket_info
+
+  string = ''
+  if info.length == 2
+    string << "======================\n"
+    string << "---- Bucket Info ----\n"
+    string << "======================\n"
+    string << "Bucket Size: #{human_readable_file_size(info[0].to_f/1000)}\n"
+    string << "Objects in Bucket: #{human_readable_file_size(info[1].to_i, 'base10')}\n"
+  end
+
+  return string
 end
 
 
@@ -120,12 +153,19 @@ private
     body << "---- Running Time ----\n"
     body << "======================\n"
     body << "Start Time: #{logger.start}\n"
-    body << "Total Time: #{format_time(total_time)}"
+    body << "Total Time: #{format_time(total_time)}\n"
 
     body << "\n\n"
 
     # add summary section
     body << logger.summary_to_s
+
+    body << "\n\n"
+
+    # get s3 bucket size
+    body << bucket_info_to_s
+
+    body << "\n\n"
 
     # add errors
     body << logger.errors_to_s
