@@ -67,7 +67,6 @@ def run_server_backup
         dh_output = `du -hs #{ENV['TMP_DIR']}/#{db}.sql`        
         summary_info << [db, dh_output.split(' ').first.chomp.strip]
         logger.info("mysql", "Finished dumping #{db}.")
-        break
       end
 
       # archive and copy to s3
