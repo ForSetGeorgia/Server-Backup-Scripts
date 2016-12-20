@@ -48,6 +48,7 @@ def run_server_backup
     # backup mysql
     if variable_is_true?('HAS_MYSQL')
       start_local = Time.now
+      summary_info = []
 
       logger.info("mysql", "Backing up MYSQL databases ...")
 
@@ -62,7 +63,11 @@ def run_server_backup
       dbs.each do |db|
         logger.info("mysql", "Dumping #{db} ...")
         `mysqldump --force --opt --single-transaction --user=#{ENV['MYSQL_USER']} --password='#{ENV['MYSQL_PASSWORD']}' --databases #{db} > #{ENV['TMP_DIR']}/#{db}.sql`
+
+        dh_output = `du -hs #{ENV['TMP_DIR']}/#{db}.sql`        
+        summary_info << [db, dh_output.split(' ').first.chomp.strip]
         logger.info("mysql", "Finished dumping #{db}.")
+        break
       end
 
       # archive and copy to s3
@@ -85,12 +90,14 @@ def run_server_backup
       `rm -rf #{ENV['TMP_DIR']}/*`
       logger.info("cleanup", "Finished removing files from #{ENV['TMP_DIR']}")
 
-      logger.summary("MySQL Databases", dbs, Time.now-start_local)
+      logger.summary("MySQL Databases", summary_info, Time.now-start_local) if !summary_info.empty?
     end
 
     # backup mongo
     if variable_is_true?('HAS_MONGO')
       start_local = Time.now
+      summary_info = []
+
       logger.info("mongo", "Backing up MONGO databases ...")
       db_type = "mongo"
       db_fname = "#{ENV['SERVER_NAME']}_#{db_type}_#{ENV['BACKUP_TYPE']}_#{date}.tar.bz"
@@ -101,6 +108,12 @@ def run_server_backup
 
       # get list of dbs that were dumped
       dbs = Dir.glob('./tmp/*').select {|f| File.directory? f}
+
+      # create summary info
+      dbs.each do |db|
+        dh_output = `du -hs #{db}`        
+        summary_info << [db.split('/').last, dh_output.split(' ').first.chomp.strip]
+      end
 
       # archive and copy to s3
 
@@ -122,7 +135,7 @@ def run_server_backup
       `rm -rf #{ENV['TMP_DIR']}/*`
       logger.info("cleanup", "Finished removing files from #{ENV['TMP_DIR']}")
 
-      logger.summary("Mongo Databases", dbs.map{|db| db.split('/').last}, Time.now-start_local)
+      logger.summary("Mongo Databases", summary_info, Time.now-start_local) if !summary_info.empty?
     end
 
     # backup all important directories
@@ -135,6 +148,8 @@ def run_server_backup
 
     # specific directories
     start_local = Time.now
+    summary_info  = []
+
     logger.info("directories", "Getting list of specific directories ...")
 
     dirs << "/etc"
@@ -156,9 +171,13 @@ def run_server_backup
     logger.info("directories", "Finished getting list of specific directories.")
 
     # archive and copy to s3
-
     dirs.each do |dir|
       logger.info("directories", "Backing up #{dir} to s3 ...")
+
+      # get the folder size
+      dh_output = `du -hs #{dir}`        
+      summary_info << [dir, dh_output.split(' ').first.chomp.strip]
+
       if environment_is_production?
         `#{ENV['S3CMD_PATH']} sync --skip-existing #{dir}  s3://#{bucket}/#{dir_folder}/`
       else
@@ -166,12 +185,14 @@ def run_server_backup
       end
       logger.info("directories", "Finished backing up #{dir} to s3.")
     end
-    logger.summary("Specific Directories", dirs, Time.now-start_local)
+    logger.summary("Specific Directories", summary_info, Time.now-start_local) if !summary_info.empty?
     
 
     # rails directories
     if variable_is_true?('HAS_RAILS')
       start_local = Time.now
+      summary_info  = []
+
       logger.info("directories", "Getting list of rails directories ...")
       apps = []
       if variable_is_true?('IS_SERVER')
@@ -185,19 +206,23 @@ def run_server_backup
 
       # get app names
       # - use the folder name that is 2 before the system folder
-      app_names = []
-      apps.each do |app|
-        folders = app.split('/')
-        if folders.length > 3
-          app_names << folders[-3]
-        end
-      end
+      # app_names = []
+      # apps.each do |app|
+      #   folders = app.split('/')
+      #   if folders.length > 3
+      #     app_names << folders[-3]
+      #   end
+      # end
 
       # archive and copy to s3
-
       apps.each do |app|
         logger.info("directories", "Backing up #{app} to s3 ...")
-        app_name = app.split('/')[2].chomp
+        # get the app name
+        app_name = app.split('/')[-3].chomp
+        # get the folder size
+        dh_output = `du -hs #{app}`        
+        summary_info << [app_name, dh_output.split(' ').first.chomp.strip]
+
         if environment_is_production?
           `#{ENV['S3CMD_PATH']} sync -r #{app}  s3://#{bucket}/#{dir_folder}/#{app_name}/`
         else
@@ -206,7 +231,7 @@ def run_server_backup
         logger.info("directories", "Finished backing up #{app} to s3.")
       end
 
-      logger.summary("Rails Apps with System Folders", app_names, Time.now-start_local) if !app_names.empty?
+      logger.summary("Rails Apps with System Folders", summary_info, Time.now-start_local) if !summary_info.empty?
     end
 
   rescue => e

@@ -69,7 +69,7 @@ class CustomLogger
 
   def errors_to_s
     string =  "======================\n"
-    string << "-----   Errors   -----\n"
+    string << "---- Errors ----\n"
     string << "======================\n"
 
     if error_messages.empty?
@@ -90,14 +90,45 @@ class CustomLogger
     if summary_messages.empty?
       string << "NONE\n"
     else
+      convert = { 'k' => 1, 'm' => 1024, 'g' => 1024*1024, 't' => 1024*1024*1024}
+      all_file_sizes = []
+
       summary_messages.each do |msg|
+        file_sizes = []
+        total = 0
+
         string << "#{msg[0]}: \n"
         if msg[1].class == Array && !msg[1].empty?
           msg[1].sort.each do |item|
-            string << "  - #{item}\n"
+            if item.class == Array && !item.empty?
+              string << "  - #{item[0]} (#{item[1]})\n"
+              file_sizes << item[1]
+            else
+              string << "  - #{item}\n"
+            end
           end
         end
         string << "Total Time: #{format_time(msg[2])}\n"
+        if !file_sizes.empty?
+          # compute the total size for this summary item
+          file_sizes.each do |size|
+            total += size.to_f*convert[size[-1].downcase]
+          end
+          if total > 0
+            all_file_sizes << total
+            string << "Total Size: #{human_readable_file_size(total)} **\n"
+          end
+        end
+        string << "\n"
+      end
+
+      if !all_file_sizes.empty?
+        string << "======================\n"
+        string << "---- Combined Total Size ----\n"
+        string << "======================\n"
+        string << "Combined Total Size: #{human_readable_file_size(all_file_sizes.inject(:+))} **\n"
+        string << "\n"
+        string << "** - database file sizes are the size of the raw dump files; database files are compressed before sending to S3\n"
         string << "\n"
       end
     end

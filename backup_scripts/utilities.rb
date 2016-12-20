@@ -30,6 +30,22 @@ def send_email(logger, total_time)
   mail.deliver!
 end
 
+# convert number into human readable file size
+def human_readable_file_size(num)
+  human = ''
+  if num < 1024
+    human = "#{num}K"
+  elsif num < 1024*1024
+    human = "#{((num) / 1024).round(1)}M"
+  elsif num < 1024*1024*1024
+    human = "#{((num) / (1024*1024)).round(1)}G"
+  else
+    human = "#{((num) / (1024*1024*1024)).round(1)}T"
+  end
+
+  return human
+end
+
 
 # make sure the required keys have values
 def keys_valid?
