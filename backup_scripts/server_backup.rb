@@ -75,7 +75,7 @@ def run_server_backup
       `tar cvfj #{ENV['TMP_DIR']}/#{db_fname} #{ENV['TMP_DIR']}/*.sql`
       logger.info("mysql", "Finished tarring and zipping databases.")
 
-      logger.info("mysql", "Backing up tarball to s3 ...")
+      logger.info("mysql", "Backing up tarball to s3 at s3://#{bucket}/#{db_folder}/#{db_fname}...")
       if environment_is_production?
         `#{ENV['S3CMD_PATH']} put #{ENV['TMP_DIR']}/#{db_fname} s3://#{bucket}/#{db_folder}/#{db_fname}`
       else
@@ -120,7 +120,7 @@ def run_server_backup
       `tar cvfj #{ENV['TMP_DIR']}/#{db_fname} #{ENV['TMP_DIR']}/*`
       logger.info("mongo", "Finished tarring and zipping databases.")
 
-      logger.info("mongo", "Backing up tarball to s3 ...")
+      logger.info("mongo", "Backing up tarball to s3 at s3://#{bucket}/#{db_folder}/#{db_fname} ...")
       if environment_is_production?
         `#{ENV['S3CMD_PATH']} put  #{ENV['TMP_DIR']}/#{db_fname} s3://#{bucket}/#{db_folder}/#{db_fname}`
       else
@@ -171,7 +171,7 @@ def run_server_backup
 
     # archive and copy to s3
     dirs.each do |dir|
-      logger.info("directories", "Backing up #{dir} to s3 ...")
+      logger.info("directories", "Backing up #{dir} to s3 to s3://#{bucket}/#{dir_folder}/...")
 
       # get the folder size
       dh_output = `du -hs #{dir}`        
@@ -215,7 +215,7 @@ def run_server_backup
 
       # archive and copy to s3
       apps.each do |app|
-        logger.info("directories", "Backing up #{app} to s3 ...")
+        logger.info("directories", "Backing up #{app} to s3 to s3://#{bucket}/#{dir_folder}/#{app_name}/...")
         # get the app name
         app_name = app.split('/')[-3].chomp
         # get the folder size
@@ -223,7 +223,7 @@ def run_server_backup
         summary_info << [app_name, dh_output.split(' ').first.chomp.strip]
 
         if environment_is_production?
-          `#{ENV['S3CMD_PATH']} sync -r #{app}  s3://#{bucket}/#{dir_folder}/#{app_name}/`
+          `#{ENV['S3CMD_PATH']} sync --skip-existing #{app}  s3://#{bucket}/#{dir_folder}/#{app_name}/`
         else
           logger.info("directories", ">>> this is not production so not saving to s3")
         end
