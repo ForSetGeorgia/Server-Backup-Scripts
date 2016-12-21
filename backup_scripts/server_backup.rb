@@ -216,12 +216,12 @@ def run_server_backup
 
       # archive and copy to s3
       apps.each do |app|
-        logger.info("directories", "Backing up #{app} to s3 to s3://#{bucket}/#{dir_folder}/#{app_name}/...")
         # get the app name
         app_name = app.split('/')[-3].chomp
         # get the folder size
         dh_output = `du -hs #{app}`        
         summary_info << [app_name, dh_output.split(' ').first.chomp.strip]
+        logger.info("directories", "Backing up #{app} to s3 to s3://#{bucket}/#{dir_folder}/#{app_name}/...")
 
         if environment_is_production?
           `#{ENV['S3CMD_PATH']} sync --skip-existing #{app}  s3://#{bucket}/#{dir_folder}/#{app_name}/`
