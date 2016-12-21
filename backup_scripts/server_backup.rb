@@ -37,6 +37,7 @@ def run_server_backup
     log = "#{ENV['SERVER_NAME']}_#{ENV['BACKUP_TYPE']}_backup.log"
     logger = CustomLogger.new("#{ENV['LOG_DIR']}/#{log}")
 
+    logger.info("general", "============================================================================")
     logger.info("general", "Starting #{ENV['SERVER_NAME']} backup ...")
 
 
