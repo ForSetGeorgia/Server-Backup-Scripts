@@ -192,8 +192,12 @@ def run_server_backup
     if variable_is_true?('HAS_RAILS')
       start_local = Time.now
       summary_info  = []
+      apps_to_ignore = []
+      if variable_exists?('RAILS_APPS_TO_IGNORE')
+        apps_to_ignore = ENV['RAILS_APPS_TO_IGNORE'].split(',').map{|x| x.strip.downcase}
+      end
 
-      logger.info("directories", "Getting list of rails directories ...")
+      logger.info("rails", "Getting list of rails directories ...")
       apps = []
       if variable_is_true?('IS_SERVER')
         apps << Dir.glob('/home/**/shared/system') # capistrano v2 folder structure
@@ -202,7 +206,7 @@ def run_server_backup
         apps << Dir.glob('/home/**/public/system') # normal rails sturcture on dev machine
       end
       apps.flatten!
-      logger.info("directories", "Finished getting list of rails directories.")
+      logger.info("rails", "Finished getting list of rails directories.")
 
       # get app names
       # - use the folder name that is 2 before the system folder
@@ -218,17 +222,23 @@ def run_server_backup
       apps.each do |app|
         # get the app name
         app_name = app.split('/')[-3].chomp
-        # get the folder size
-        dh_output = `du -hs #{app}`        
-        summary_info << [app_name, dh_output.split(' ').first.chomp.strip]
-        logger.info("directories", "Backing up #{app} to s3 to s3://#{bucket}/#{dir_folder}/#{app_name}/...")
 
-        if environment_is_production?
-          `#{ENV['S3CMD_PATH']} sync --skip-existing #{app}  s3://#{bucket}/#{dir_folder}/#{app_name}/`
+        # check if in list of apps to ignore
+        if !apps_to_ignore.empty? && apps_to_ignore.include?(app_name.downcase)
+          logger.info("rails", "Ignoring Rails app: #{app_name}")
         else
-          logger.info("directories", ">>> this is not production so not saving to s3")
+          # get the folder size
+          dh_output = `du -hs #{app}`        
+          summary_info << [app_name, dh_output.split(' ').first.chomp.strip]
+          logger.info("rails", "Backing up #{app} to s3 to s3://#{bucket}/#{dir_folder}/#{app_name}/...")
+
+          if environment_is_production?
+            `#{ENV['S3CMD_PATH']} sync --skip-existing #{app}  s3://#{bucket}/#{dir_folder}/#{app_name}/`
+          else
+            logger.info("rails", ">>> this is not production so not saving to s3")
+          end
+          logger.info("rails", "Finished backing up #{app} to s3.")
         end
-        logger.info("directories", "Finished backing up #{app} to s3.")
       end
 
       logger.summary("Rails Apps with System Folders", summary_info, Time.now-start_local) if !summary_info.empty?
