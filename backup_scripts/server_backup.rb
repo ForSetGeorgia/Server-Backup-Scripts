@@ -226,6 +226,7 @@ def run_server_backup
         # check if in list of apps to ignore
         if !apps_to_ignore.empty? && apps_to_ignore.include?(app_name.downcase)
           logger.info("rails", "Ignoring Rails app: #{app_name}")
+          summary_info << [app_name, 'IGNORED']
         else
           # get the folder size
           dh_output = `du -hs #{app}`        

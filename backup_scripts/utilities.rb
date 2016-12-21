@@ -162,10 +162,11 @@ private
 
     body << "\n\n"
 
-    # get s3 bucket size
-    body << bucket_info_to_s
-
-    body << "\n\n"
+    if environment_is_production?
+      # get s3 bucket size
+      body << bucket_info_to_s
+      body << "\n\n"
+    end
 
     # add errors
     body << logger.errors_to_s

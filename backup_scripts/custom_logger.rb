@@ -112,7 +112,8 @@ class CustomLogger
         if !file_sizes.empty?
           # compute the total size for this summary item
           file_sizes.each do |size|
-            total += size.to_f*convert[size[-1].downcase]
+            factor = convert[size[-1].downcase]
+            total += size.to_f*factor if !factor.nil?
           end
           if total > 0
             all_file_sizes << total
