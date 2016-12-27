@@ -2,4 +2,4 @@ data/*
 log/*
 .env
 tmp/*
-error_log.log
+*.log
