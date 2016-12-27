@@ -18,9 +18,9 @@
 # end
 
 # Learn more: http://github.com/javan/whenever
-
-job_type :rake, 'cd :path && bundle exec rake :task --quiet'
-set :output, '/log/daily_cron_job.log'
+env :PATH, ENV['PATH']
+job_type :rake, 'cd :path && bundle exec rake :task --quiet :output'
+set :output, "#{ENV['ROOT_DIR']}/log/cron.log"
 
 every 1.day, at: ENV['BACKUP_SERVER_TIME'] do
   rake 'backup:run'

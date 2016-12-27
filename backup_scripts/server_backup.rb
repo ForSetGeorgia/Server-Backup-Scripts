@@ -12,7 +12,7 @@ def run_server_backup
 
   ## create basic logger in case the variables are not set properly
   ## - if variables are set, this logger will be re-created properly below
-  logger = CustomLogger.new("./error_log.log")
+  logger = CustomLogger.new("ENV['ROOT_DIR']/error_log.log")
 
 
   ######################################
@@ -107,7 +107,7 @@ def run_server_backup
       logger.info("mongo", "Finished dumping database.")
 
       # get list of dbs that were dumped
-      dbs = Dir.glob('./tmp/*').select {|f| File.directory? f}
+      dbs = Dir.glob("#{ENV['TMP_DIR']}/*").select {|f| File.directory? f}
 
       # create summary info
       dbs.each do |db|
