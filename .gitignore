@@ -1,5 +1,6 @@
-data/*
-log/*
 .env
-tmp/*
 *.log
+log/*
+tmp/*
+!/log/.keep
+!/tmp/.keep
