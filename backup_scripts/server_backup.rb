@@ -12,7 +12,7 @@ def run_server_backup
 
   ## create basic logger in case the variables are not set properly
   ## - if variables are set, this logger will be re-created properly below
-  logger = CustomLogger.new("ENV['ROOT_DIR']/error_log.log")
+  logger = CustomLogger.new("#{ENV['ROOT_DIR']}/error_log.log")
 
 
   ######################################

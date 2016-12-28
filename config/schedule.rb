@@ -20,7 +20,7 @@
 # Learn more: http://github.com/javan/whenever
 env :PATH, ENV['PATH']
 job_type :rake, 'cd :path && bundle exec rake :task --quiet :output'
-set :output, "#{ENV['ROOT_DIR']}/log/cron.log"
+set :output, "#{ENV['ROOT_DIR']}/cron.log"
 
 every 1.day, at: ENV['BACKUP_SERVER_TIME'] do
   rake 'backup:run'
