@@ -19,10 +19,14 @@ def format_time(time)
 end
 
 def send_email(logger, total_time)
+  sbj = "#{ENV['SERVER_NAME']} Server Backup Report (#{Time.now.strftime('%F')})"
+  if logger.has_errors?
+    sbj << " ****ERRORS OCCURRED****"
+  end
   mail = Mail.new do
     from    ENV['FEEDBACK_FROM_EMAIL']
     to      ENV['FEEDBACK_TO_EMAIL']
-    subject "#{ENV['SERVER_NAME']} Server Backup Report (#{Time.now.strftime('%F')})"
+    subject sbj
   end
 
   mail[:body] = build_email_body(logger, total_time)

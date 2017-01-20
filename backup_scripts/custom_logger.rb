@@ -37,6 +37,13 @@ class CustomLogger
   end
 
   #####################################3
+  
+  def has_errors?
+    !error_messages.empty?
+  end
+
+
+  #####################################3
   ## WRITE MESSAGES INTO NICE STRING FORMAT
 
   def info_to_s
