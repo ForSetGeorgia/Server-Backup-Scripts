@@ -166,7 +166,9 @@ private
 
     body << "\n\n"
 
-    if environment_is_production?
+    # only write out the bucket info once a week since it takes so long to compute
+    # friday = wday of 5
+    if environment_is_production? && Time.now.wday == 5
       # get s3 bucket size
       body << bucket_info_to_s
       body << "\n\n"
