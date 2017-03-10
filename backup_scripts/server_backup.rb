@@ -138,6 +138,50 @@ def run_server_backup
       logger.summary("Mongo Databases", summary_info, Time.now-start_local) if !summary_info.empty?
     end
 
+    # backup postgres
+    if variable_is_true?('HAS_POSTGRES')
+      start_local = Time.now
+      summary_info = []
+
+      db_type ='postgres'
+      db_folder = 'databases'
+      db_fname = "#{ENV['SERVER_NAME']}_#{db_type}_#{ENV['BACKUP_TYPE']}_#{date}.tar.bz"
+
+      logger.info("postgres", "Dumping databases ...")
+      `sh ./postgres_db_dump.sh '#{ENV['POSTGRES_USER']}' '#{ENV['POSTGRES_PASSWORD']}' '#{ENV['TMP_DIR']}'`
+
+      # get list of dbs that were dumped
+      dbs = Dir.glob("#{ENV['TMP_DIR']}/*")
+
+      # create summary info
+      dbs.each do |db|
+        dh_output = `du -hs #{db}`        
+        summary_info << [db.split('/').last.gsub('.sql', ''), dh_output.split(' ').first.chomp.strip]
+      end
+
+      # archive and copy to s3
+
+      logger.info("postgres", "Tarring and zipping databases ...")
+      `tar cvfj #{ENV['TMP_DIR']}/#{db_fname} #{ENV['TMP_DIR']}/*.sql`
+      logger.info("postgres", "Finished tarring and zipping databases.")
+
+      logger.info("postgres", "Backing up tarball to s3 at s3://#{bucket}/#{db_folder}/#{db_fname}...")
+      if environment_is_production?
+        `#{ENV['S3CMD_PATH']} put #{ENV['TMP_DIR']}/#{db_fname} s3://#{bucket}/#{db_folder}/#{db_fname}`
+      else
+        logger.info("postgres", ">>> this is not production so not saving to s3")
+      end
+      logger.info("postgres", "Finished backing up tarball to s3.")
+
+      # clean tmp_dir
+
+      logger.info("cleanup", "Removing files from #{ENV['TMP_DIR']}")
+      `rm -rf #{ENV['TMP_DIR']}/*`
+      logger.info("cleanup", "Finished removing files from #{ENV['TMP_DIR']}")
+
+      logger.summary("Postgres Databases", summary_info, Time.now-start_local) if !summary_info.empty?
+    end
+
     # backup all important directories
 
     dir_folder = "directories"
