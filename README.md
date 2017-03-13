@@ -11,6 +11,15 @@ You indicate which of these are to be backed up in the .env file.
 * specific folders (/etc, /home/user/folder, etc.)
 * Rails' shared/system folders
 
+## Postgres
+If you are backing up postgres you have to provide a user and password so the user must be setup to use md5 and not peer login. If you are using the default admin account of postgres, do the following to setup the account correctly (taken from [StackOverflow](http://stackoverflow.com/a/26735105)):
+* log into the server and run `su postgres`
+* `psql -U postgres`
+* run the following command using a strong password: `ALTER USER postgres with password 'your-password';`
+* exit postgres console (`ctrl+d`)
+* edit the postgres config file `pg_hba.conf` at `/etc/postgresql/9.x/main`
+* scroll to the bottom and change the `local all postgres peer` line to `local all postgres md5`
+* restart the postgres server with `sudo service postgresql restart`
 
 # The requirements are
 * Ruby is installed under root (rbenv, at least ruby 2.3.1)
