@@ -88,7 +88,7 @@ end
 def keys_valid?
   valid = true
   msg = []
-  required_keys = %w(FEEDBACK_FROM_EMAIL FEEDBACK_FROM_EMAIL_PASSWORD FEEDBACK_TO_EMAIL BACKUP_TYPE SERVER_NAME S3_BUCKET_PREFIX S3_BUCKET_SEPARATOR S3CMD_PATH ROOT_DIR TMP_DIR LOG_DIR BACKUP_SERVER_TIME)
+  required_keys = %w(EMAIL_SMTP_DOMAIN EMAIL_SMTP_PORT FEEDBACK_FROM_EMAIL FEEDBACK_FROM_EMAIL_PASSWORD FEEDBACK_TO_EMAIL BACKUP_TYPE SERVER_NAME S3_BUCKET_PREFIX S3_BUCKET_SEPARATOR S3CMD_PATH ROOT_DIR TMP_DIR LOG_DIR BACKUP_SERVER_TIME)
   mysql_keys = %w(MYSQL_USER MYSQL_PASSWORD)
   missing_keys = []
   keys = required_keys
@@ -127,8 +127,8 @@ end
 if environment_is_production? || variable_is_true?('IS_SERVER')
   Mail.defaults do
     delivery_method :smtp,
-                    address: 'smtp.gmail.com',
-                    port: '587',
+                    address: ENV['EMAIL_SMTP_DOMAIN'],
+                    port: ENV['EMAIL_SMTP_PORT'],
                     user_name: ENV['FEEDBACK_FROM_EMAIL'],
                     password: ENV['FEEDBACK_FROM_EMAIL_PASSWORD'],
                     authentication: :plain,
