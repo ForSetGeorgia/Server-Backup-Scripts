@@ -90,10 +90,14 @@ def keys_valid?
   msg = []
   required_keys = %w(EMAIL_SMTP_DOMAIN EMAIL_SMTP_PORT FEEDBACK_FROM_EMAIL FEEDBACK_FROM_EMAIL_PASSWORD FEEDBACK_TO_EMAIL BACKUP_TYPE SERVER_NAME S3_BUCKET_PREFIX S3_BUCKET_SEPARATOR S3CMD_PATH ROOT_DIR TMP_DIR LOG_DIR BACKUP_SERVER_TIME)
   mysql_keys = %w(MYSQL_USER MYSQL_PASSWORD)
+  mitb_keys = %w(MAIL_IN_A_BOX_BACKUP_DIRECTORY MAIL_IN_A_BOX_S3_DIRECTORY)
   missing_keys = []
   keys = required_keys
   if variable_is_true?('HAS_MYSQL')
     keys << mysql_keys
+  end
+  if variable_is_true?('HAS_MAIL_IN_A_BOX')
+    keys << mitb_keys
   end
   keys.flatten!
   keys.each do |key|
@@ -115,6 +119,10 @@ def keys_valid?
   end
   if !File.exists? ENV['LOG_DIR']
     msg << "ERROR: the log directory '#{ENV['LOG_DIR']}' does not exist and must be created before running this script"
+    valid = false
+  end
+  if variable_is_true?('HAS_MYSQL') && !File.exists?(ENV['MAIL_IN_A_BOX_BACKUP_DIRECTORY'])
+    msg << "ERROR: the Mail-In-A-Box backup directory '#{ENV['MAIL_IN_A_BOX_BACKUP_DIRECTORY']}' does not exist and must be created before running this script"
     valid = false
   end
 

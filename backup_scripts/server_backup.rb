@@ -65,7 +65,7 @@ def run_server_backup
         logger.info("mysql", "Dumping #{db} ...")
         `mysqldump --force --opt --single-transaction --user=#{ENV['MYSQL_USER']} --password='#{ENV['MYSQL_PASSWORD']}' --databases #{db} > #{ENV['TMP_DIR']}/#{db}.sql`
 
-        dh_output = `du -hs #{ENV['TMP_DIR']}/#{db}.sql`        
+        dh_output = `du -hs #{ENV['TMP_DIR']}/#{db}.sql`
         summary_info << [db, dh_output.split(' ').first.chomp.strip]
         logger.info("mysql", "Finished dumping #{db}.")
       end
@@ -111,7 +111,7 @@ def run_server_backup
 
       # create summary info
       dbs.each do |db|
-        dh_output = `du -hs #{db}`        
+        dh_output = `du -hs #{db}`
         summary_info << [db.split('/').last, dh_output.split(' ').first.chomp.strip]
       end
 
@@ -155,7 +155,7 @@ def run_server_backup
 
       # create summary info
       dbs.each do |db|
-        dh_output = `du -hs #{db}`        
+        dh_output = `du -hs #{db}`
         summary_info << [db.split('/').last.gsub('.sql', ''), dh_output.split(' ').first.chomp.strip]
       end
 
@@ -219,7 +219,7 @@ def run_server_backup
       logger.info("directories", "Backing up #{dir} to s3 to s3://#{bucket}/#{dir_folder}/...")
 
       # get the folder size
-      dh_output = `du -hs #{dir}`        
+      dh_output = `du -hs #{dir}`
       summary_info << [dir, dh_output.split(' ').first.chomp.strip]
 
       if environment_is_production?
@@ -230,7 +230,7 @@ def run_server_backup
       logger.info("directories", "Finished backing up #{dir} to s3.")
     end
     logger.summary("Specific Directories", summary_info, Time.now-start_local) if !summary_info.empty?
-    
+
 
     # rails directories
     if variable_is_true?('HAS_RAILS')
@@ -273,7 +273,7 @@ def run_server_backup
           summary_info << [app_name, 'IGNORED']
         else
           # get the folder size
-          dh_output = `du -hs #{app}`        
+          dh_output = `du -hs #{app}`
           summary_info << [app_name, dh_output.split(' ').first.chomp.strip]
           logger.info("rails", "Backing up #{app} to s3 to s3://#{bucket}/#{dir_folder}/#{app_name}/...")
 
@@ -288,6 +288,67 @@ def run_server_backup
 
       logger.summary("Rails Apps with System Folders", summary_info, Time.now-start_local) if !summary_info.empty?
     end
+
+
+    # backup mail-in-a-box
+    if variable_is_true?('HAS_MAIL_IN_A_BOX') && variable_exists?('MAIL_IN_A_BOX_BACKUP_DIRECTORY')
+      # assume the backup directory exists (it is checked for in keys_valid?)
+
+      start_local = Time.now
+      summary_info  = []
+
+      logger.info("mail-in-a-box", "Checking for encrypted folder and secret_key file")
+
+      encrypted_folder = "encrypted"
+      encrypted_folder_path = "#{ENV['MAIL_IN_A_BOX_BACKUP_DIRECTORY']}/#{encrypted_folder}"
+      secret_key = "#{ENV['MAIL_IN_A_BOX_BACKUP_DIRECTORY']}/secret_key.txt"
+      encrypted_s3_folder = 'encrypted'
+
+      if File.exists?(encrypted_folder_path) && File.exists?(secret_key)
+        logger.info("mail-in-a-box", "Found files, backing up to s3 to s3://#{bucket}/#{ENV['MAIL_IN_A_BOX_S3_DIRECTORY']}/...")
+
+        # secrety key
+        # get the file size
+        dh_output = `du -hs #{secret_key}`
+        summary_info << [secret_key, dh_output.split(' ').first.chomp.strip]
+        if environment_is_production?
+        `#{ENV['S3CMD_PATH']} put #{secret_key} s3://#{bucket}/#{ENV['MAIL_IN_A_BOX_S3_DIRECTORY']}/#{secret_key}`
+        else
+          logger.info("mail-in-a-box", ">>> this is not production so not saving to s3")
+        end
+
+
+        # copy the encrypted folder to tmp so can compress and send to s3
+        dh_output = `du -hs #{encrypted_folder_path}`
+        summary_info << [encrypted_folder_path, dh_output.split(' ').first.chomp.strip]
+        folder_fname = "encrypted_folder_#{date}.tar.bz"
+
+        logger.info("mail-in-a-box", "Tarring and zipping encrypted folder ...")
+        `cp -r #{encrypted_folder_path} #{ENV['TMP_DIR']}/#{encrypted_folder}`
+        `tar cvfj #{ENV['TMP_DIR']}/#{folder_fname} #{ENV['TMP_DIR']}/#{encrypted_folder}`
+        logger.info("mail-in-a-box", "Finished tarring and zipping encrypted folder.")
+
+        logger.info("mail-in-a-box", "Backing up tarball to s3 at s3://#{bucket}/#{ENV['MAIL_IN_A_BOX_S3_DIRECTORY']}/#{encrypted_s3_folder}/#{folder_fname}...")
+        if environment_is_production?
+          `#{ENV['S3CMD_PATH']} put #{ENV['TMP_DIR']}/#{folder_fname} s3://#{bucket}/#{ENV['MAIL_IN_A_BOX_S3_DIRECTORY']}/#{encrypted_s3_folder}/#{folder_fname}`
+        else
+          logger.info("mail-in-a-box", ">>> this is not production so not saving to s3")
+        end
+        logger.info("mail-in-a-box", "Finished backing up tarball to s3.")
+
+      else
+        logger.error("mail-in-a-box", "At least one of the following paths could not be found: #{encrypted_folder_path} OR #{secret_key}")
+      end
+
+      # clean tmp_dir
+      logger.info("cleanup", "Removing files from #{ENV['TMP_DIR']}")
+      `rm -rf #{ENV['TMP_DIR']}/*`
+      logger.info("cleanup", "Finished removing files from #{ENV['TMP_DIR']}")
+
+      logger.summary("Mail-In-A-Box", summary_info, Time.now-start_local) if !summary_info.empty?
+    end
+
+
 
   rescue => e
     logger.error(e.class.to_s, "#{e.message}\n--BACKTRACE--\n - #{e.backtrace.join("\n - ")}")
