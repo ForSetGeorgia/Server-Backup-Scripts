@@ -121,7 +121,7 @@ def keys_valid?
     msg << "ERROR: the log directory '#{ENV['LOG_DIR']}' does not exist and must be created before running this script"
     valid = false
   end
-  if variable_is_true?('HAS_MYSQL') && !File.exists?(ENV['MAIL_IN_A_BOX_BACKUP_DIRECTORY'])
+  if variable_is_true?('HAS_MAIL_IN_A_BOX') && !File.exists?(ENV['MAIL_IN_A_BOX_BACKUP_DIRECTORY'])
     msg << "ERROR: the Mail-In-A-Box backup directory '#{ENV['MAIL_IN_A_BOX_BACKUP_DIRECTORY']}' does not exist and must be created before running this script"
     valid = false
   end
