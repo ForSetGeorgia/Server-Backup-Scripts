@@ -88,7 +88,7 @@ end
 def keys_valid?
   valid = true
   msg = []
-  required_keys = %w(EMAIL_SMTP_DOMAIN EMAIL_SMTP_PORT FEEDBACK_FROM_EMAIL FEEDBACK_FROM_EMAIL_PASSWORD FEEDBACK_TO_EMAIL BACKUP_TYPE SERVER_NAME S3_BUCKET_PREFIX S3_BUCKET_SEPARATOR S3CMD_PATH ROOT_DIR TMP_DIR LOG_DIR BACKUP_SERVER_TIME)
+  required_keys = %w(EMAIL_SMTP_DOMAIN EMAIL_SMTP_PORT FEEDBACK_FROM_EMAIL FEEDBACK_SMTP_AUTH_USER FEEDBACK_SMTP_AUTH_PASSWORD FEEDBACK_TO_EMAIL BACKUP_TYPE SERVER_NAME S3_BUCKET_PREFIX S3_BUCKET_SEPARATOR S3CMD_PATH ROOT_DIR TMP_DIR LOG_DIR BACKUP_SERVER_TIME)
   mysql_keys = %w(MYSQL_USER MYSQL_PASSWORD)
   mitb_keys = %w(MAIL_IN_A_BOX_BACKUP_DIRECTORY MAIL_IN_A_BOX_S3_DIRECTORY)
   missing_keys = []
@@ -137,8 +137,8 @@ if environment_is_production? || variable_is_true?('IS_SERVER')
     delivery_method :smtp,
                     address: ENV['EMAIL_SMTP_DOMAIN'],
                     port: ENV['EMAIL_SMTP_PORT'],
-                    user_name: ENV['FEEDBACK_FROM_EMAIL'],
-                    password: ENV['FEEDBACK_FROM_EMAIL_PASSWORD'],
+                    user_name: ENV['FEEDBACK_SMTP_AUTH_USER'],
+                    password: ENV['FEEDBACK_SMTP_AUTH_PASSWORD'],
                     authentication: :plain,
                     enable_starttls_auto: true
   end
