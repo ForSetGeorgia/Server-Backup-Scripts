@@ -147,8 +147,33 @@ def run_server_backup
       db_folder = 'databases'
       db_fname = "#{ENV['SERVER_NAME']}_#{db_type}_#{ENV['BACKUP_TYPE']}_#{date}.tar.bz"
 
-      logger.info("postgres", "Dumping databases ...")
-      `sh ./postgres_db_dump.sh '#{ENV['POSTGRES_USER']}' '#{ENV['POSTGRES_PASSWORD']}' '#{ENV['TMP_DIR']}'`
+      if !ENV['POSTGRES_DOCKER_CONTAINERS'].nil? && !ENV['POSTGRES_DOCKER_CONTAINERS'].index(':').nil?
+        # backing up postgres dbs in docker containers
+
+        logger.info("postgres", "Dumping docker databases ...")
+
+        containers = ENV['POSTGRES_DOCKER_CONTAINERS'].split(',')
+        containers.each do |container|
+          container_name, path = container.split(':')
+          if container_name && path
+            # test to make sure container is running
+            output = `cd #{path} && docker exec -t #{container_name} echo 'running!'`
+            if output.chomp.strip == 'running!'
+              `cd #{path} && docker exec -t #{container_name} pg_dumpall -c -U #{ENV['POSTGRES_USER']} | gzip > #{ENV['TMP_DIR']}/#{container_name}.sql.gz`
+            else
+              logger.error("postgres", "The postgres docker container '#{container_name}' is not running and so cannot be backed up")
+            end
+          else
+            logger.error("postgres", "The POSTGRES_DOCKER_CONTAINERS enviornmental variable was not properly setup")
+          end
+
+        end
+
+      else
+        # backing up postgres dbs on server
+        logger.info("postgres", "Dumping databases ...")
+        `sh ./postgres_db_dump.sh '#{ENV['POSTGRES_USER']}' '#{ENV['POSTGRES_PASSWORD']}' '#{ENV['TMP_DIR']}'`
+      end
 
       # get list of dbs that were dumped
       dbs = Dir.glob("#{ENV['TMP_DIR']}/*")
@@ -156,13 +181,12 @@ def run_server_backup
       # create summary info
       dbs.each do |db|
         dh_output = `du -hs #{db}`
-        summary_info << [db.split('/').last.gsub('.sql', ''), dh_output.split(' ').first.chomp.strip]
+        summary_info << [db.split('/').last.gsub(/\.sql.*/, ''), dh_output.split(' ').first.chomp.strip]
       end
 
       # archive and copy to s3
-
       logger.info("postgres", "Tarring and zipping databases ...")
-      `tar cvfj #{ENV['TMP_DIR']}/#{db_fname} #{ENV['TMP_DIR']}/*.sql`
+      `tar cvfj #{ENV['TMP_DIR']}/#{db_fname} #{ENV['TMP_DIR']}/*.sql*`
       logger.info("postgres", "Finished tarring and zipping databases.")
 
       logger.info("postgres", "Backing up tarball to s3 at s3://#{bucket}/#{db_folder}/#{db_fname}...")
@@ -174,7 +198,6 @@ def run_server_backup
       logger.info("postgres", "Finished backing up tarball to s3.")
 
       # clean tmp_dir
-
       logger.info("cleanup", "Removing files from #{ENV['TMP_DIR']}")
       `rm -rf #{ENV['TMP_DIR']}/*`
       logger.info("cleanup", "Finished removing files from #{ENV['TMP_DIR']}")
